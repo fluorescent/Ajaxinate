@@ -28,11 +28,11 @@ export function Ajaxinate(config) {
   const settings = config || {};
 
   const defaults = {
-    method: 'scroll',
-    container: '#AjaxinateContainer',
-    pagination: '#AjaxinatePagination',
+    method: "scroll",
+    container: "#AjaxinateContainer",
+    pagination: "#AjaxinatePagination",
     offset: 0,
-    loadingText: 'Loading',
+    loadingText: "Loading",
     callback: null,
   };
 
@@ -56,7 +56,9 @@ export function Ajaxinate(config) {
 }
 
 Ajaxinate.prototype.initialize = function initialize() {
-  if (!this.containerElement) { return; }
+  if (!this.containerElement) {
+    return;
+  }
 
   const initializers = {
     click: this.addClickListener,
@@ -67,28 +69,42 @@ Ajaxinate.prototype.initialize = function initialize() {
 };
 
 Ajaxinate.prototype.addScrollListeners = function addScrollListeners() {
-  if (!this.paginationElement) { return; }
+  if (!this.paginationElement) {
+    return;
+  }
 
-  document.addEventListener('scroll', this.checkIfPaginationInView);
-  window.addEventListener('resize', this.checkIfPaginationInView);
-  window.addEventListener('orientationchange', this.checkIfPaginationInView);
+  document.addEventListener("scroll", this.checkIfPaginationInView);
+  window.addEventListener("resize", this.checkIfPaginationInView);
+  window.addEventListener("orientationchange", this.checkIfPaginationInView);
 };
 
 Ajaxinate.prototype.addClickListener = function addClickListener() {
-  if (!this.paginationElement) { return; }
+  if (!this.paginationElement) {
+    return;
+  }
 
-  this.nextPageLinkElement = this.paginationElement.querySelector('a');
+  this.nextPageLinkElement = this.paginationElement.querySelector("a");
   this.clickActive = true;
 
-  if (typeof this.nextPageLinkElement !== 'undefined' && this.nextPageLinkElement !== null) {
-    this.nextPageLinkElement.addEventListener('click', this.preventMultipleClicks);
+  if (
+    typeof this.nextPageLinkElement !== "undefined" &&
+    this.nextPageLinkElement !== null
+  ) {
+    this.nextPageLinkElement.addEventListener(
+      "click",
+      this.preventMultipleClicks
+    );
   }
 };
 
-Ajaxinate.prototype.preventMultipleClicks = function preventMultipleClicks(event) {
+Ajaxinate.prototype.preventMultipleClicks = function preventMultipleClicks(
+  event
+) {
   event.preventDefault();
 
-  if (!this.clickActive) { return; }
+  if (!this.clickActive) {
+    return;
+  }
 
   this.nextPageLinkElement.innerText = this.settings.loadingText;
   this.nextPageUrl = this.nextPageLinkElement.href;
@@ -98,11 +114,14 @@ Ajaxinate.prototype.preventMultipleClicks = function preventMultipleClicks(event
 };
 
 Ajaxinate.prototype.checkIfPaginationInView = function checkIfPaginationInView() {
-  const top = this.paginationElement.getBoundingClientRect().top - this.settings.offset;
-  const bottom = this.paginationElement.getBoundingClientRect().bottom + this.settings.offset;
+  const top =
+    this.paginationElement.getBoundingClientRect().top - this.settings.offset;
+  const bottom =
+    this.paginationElement.getBoundingClientRect().bottom +
+    this.settings.offset;
 
   if (top <= window.innerHeight && bottom >= 0) {
-    this.nextPageLinkElement = this.paginationElement.querySelector('a');
+    this.nextPageLinkElement = this.paginationElement.querySelector("a");
     this.removeScrollListener();
 
     if (this.nextPageLinkElement) {
@@ -114,49 +133,51 @@ Ajaxinate.prototype.checkIfPaginationInView = function checkIfPaginationInView()
   }
 };
 
-Ajaxinate.prototype.loadMore = function loadMore() {
+Ajaxinate.prototype.loadMore = function getTheHtmlOfTheNextPageWithAnAjaxRequest() {
   this.request = new XMLHttpRequest();
-
   this.request.onreadystatechange = function success() {
-    if (!this.request.responseXML) { return; }
-    if (!this.request.readyState === 4 || !this.request.status === 200) { return; }
-
-    const newContainer = this.request.responseXML.querySelectorAll(this.settings.container)[0];
-    const newPagination = this.request.responseXML.querySelectorAll(this.settings.pagination)[0];
-
-    this.containerElement.insertAdjacentHTML('beforeend', newContainer.innerHTML);
-
-    if (typeof newPagination === 'undefined') {
-      this.removePaginationElement();
-    } else {
+    if (this.request.readyState === 4 && this.request.status === 200) {
+      var parser = new DOMParser();
+      var htmlDoc = parser.parseFromString(
+        this.request.responseText,
+        "text/html"
+      );
+      var newContainer = htmlDoc.querySelectorAll(this.settings.container)[0];
+      var newPagination = htmlDoc.querySelectorAll(this.settings.pagination)[0];
+      this.containerElement.insertAdjacentHTML(
+        "beforeend",
+        newContainer.innerHTML
+      );
       this.paginationElement.innerHTML = newPagination.innerHTML;
-
-      if (this.settings.callback && typeof this.settings.callback === 'function') {
+      if (
+        this.settings.callback &&
+        typeof this.settings.callback === "function"
+      ) {
         this.settings.callback(this.request.responseXML);
       }
-
       this.initialize();
     }
   }.bind(this);
-
-  this.request.open('GET', this.nextPageUrl);
-  this.request.responseType = 'document';
+  this.request.open("GET", this.nextPageUrl, false);
   this.request.send();
 };
 
 Ajaxinate.prototype.removeClickListener = function removeClickListener() {
-  this.nextPageLinkElement.removeEventListener('click', this.preventMultipleClicks);
+  this.nextPageLinkElement.removeEventListener(
+    "click",
+    this.preventMultipleClicks
+  );
 };
 
 Ajaxinate.prototype.removePaginationElement = function removePaginationElement() {
-  this.paginationElement.innerHTML = '';
+  this.paginationElement.innerHTML = "";
   this.destroy();
 };
 
 Ajaxinate.prototype.removeScrollListener = function removeScrollListener() {
-  document.removeEventListener('scroll', this.checkIfPaginationInView);
-  window.removeEventListener('resize', this.checkIfPaginationInView);
-  window.removeEventListener('orientationchange', this.checkIfPaginationInView);
+  document.removeEventListener("scroll", this.checkIfPaginationInView);
+  window.removeEventListener("resize", this.checkIfPaginationInView);
+  window.removeEventListener("orientationchange", this.checkIfPaginationInView);
 };
 
 Ajaxinate.prototype.destroy = function destroy() {
