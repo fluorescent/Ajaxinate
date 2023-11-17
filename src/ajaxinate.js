@@ -158,7 +158,7 @@ Ajaxinate.prototype.loadMore = function getTheHtmlOfTheNextPageWithAnAjaxRequest
       this.initialize();
     }
   }.bind(this);
-  this.request.open("GET", this.nextPageUrl, false);
+  this.request.open("GET", this.nextPageUrl);
   this.request.send();
 };
 
